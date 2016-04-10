@@ -1,13 +1,15 @@
 function Print(fid, data, varargin)
-    % 0x01 0x02 0x04 0x08
-    % 
+    % Print(fid, data, 'Head', HeadCell, 'DataFormat', DFormat, 'OutputFormat', Format);
+    % OutputFormat 'Plain' 'TPlain' 'Latex' 'TLatex'
+    % DataFormat (cell type: size = 1 row, size(data,2) column) : {'%15.4f', '%15.4g'}
     
     nVargin = length(varargin);
     [n, m] = size(data);
     i = 1;
     headflag = 0;
     outputflag = 0;
-    
+    dataflag = 0;
+    stringflag = 0;
     while i <= nVargin
         switch lower(varargin{i})
             case 'head'
@@ -16,6 +18,12 @@ function Print(fid, data, varargin)
             case 'outputformat'
                 OutputFormat = varargin{i+1};
                 outputflag = 1;
+            case 'dataformat'
+                DataFormat = varargin{i+1};
+                dataflag = 1;
+            case 'stringformat'
+                stringFormat = varargin{i+1};
+                stringflag = 1;
             otherwise
                 % error
         end
@@ -28,48 +36,57 @@ function Print(fid, data, varargin)
         end
     end
     if outputflag == 0
-        OutputFormat = 'Plant';
+        OutputFormat = 'Plain';
     end
-    numberFormat = '%13.2f';
-    stringFormat = '%13s';
+    if dataflag == 0
+        DataFormat = cell(1, m);
+         for i = 1:m
+            DataFormat{i} = '%10.3g';
+        end
+    end
+    if stringflag == 0
+        stringFormat = '%10s';
+    end
     space = ' ';
     tspace = [space space];
-    columnsep = '&';
+    columnsep = ' & ';
     endline = ' \\\\\n';
     toprule = '\\toprule\n';
     midrule = '\\midrule\n';
     bottomrule = '\\bottomrule\n';
     newline = '\n';
-    begintableprefix = '\\begin{tabular}[';
-    begintablesuffix = ']\n';
+    begintableprefix = '\\begin{tabular}{';
+    begintablesuffix = '}\n';
     endtable = '\\end{tabular}\n';
     
     switch lower(OutputFormat)
-        case 'plant'
-            dataFormatStr =  [char(kron(ones(1, m), numberFormat)), newline];
+        case 'plain'
+            dataFormatStr =  [ConnectStr(DataFormat, space), newline];
             for i = 1:m
-                fprintf(fid, stringFormat, Head{i});
+                if i == 1
+                    fprintf(fid, stringFormat, Head{i});
+                else
+                    fprintf(fid, [space stringFormat], Head{i});
+                end
             end
             fprintf(fid, newline);
             for i = 1:n
                 fprintf(fid, dataFormatStr, data(i, :));
             end
-        case 'transplant'
-            formatStr =  [stringFormat, char(kron(ones(1, n), numberFormat)), newline];
-            fprintf(fid, newline);
+        case 'tplain'
             data = data';
             for i = 1:m
+                formatStr =  [stringFormat, space, ConnectStr(repmat(DataFormat(i), 1, n), space), newline];
                 fprintf(fid, formatStr, Head{i}, data(i, :));
             end
         case 'latex'
             begintable = [begintableprefix, kron(ones(1, m), 'c'), begintablesuffix];
-            dataFormatStr =  [numberFormat, char(kron(ones(1, m-1),...
-                [space columnsep space numberFormat])), endline];
+            dataFormatStr = [ConnectStr(DataFormat, columnsep), endline];
             fprintf(fid, begintable);
             fprintf(fid, [tspace toprule]);
             for i = 1:m
                 if i ~= 1
-                    fprintf(fid, [space columnsep space]);
+                    fprintf(fid, columnsep);
                 else
                     fprintf(fid, tspace);
                 end
@@ -82,15 +99,14 @@ function Print(fid, data, varargin)
             end
             fprintf(fid, [tspace bottomrule]);
             fprintf(fid, endtable);
-        case 'translatex'
-            data = data';
-            formatStr =  [stringFormat,char(kron(ones(1, n),...
-                [space columnsep space numberFormat])), endline];
+        case 'tlatex'
             data = data';
             begintable = [begintableprefix, kron(ones(1, n), 'c'), begintablesuffix];
             fprintf(fid, begintable);
             fprintf(fid, [tspace toprule]);
             for i = 1:m
+                formatStr =  [stringFormat, columnsep,...
+                    ConnectStr(repmat(DataFormat(i), 1, n), columnsep), endline];
                 fprintf(fid, [tspace formatStr], Head{i}, data(i, :));
                 if i == 1 
                     fprintf(fid, [tspace midrule]);
@@ -100,5 +116,21 @@ function Print(fid, data, varargin)
             fprintf(fid, endtable);
         otherwise
             % error
+    end
+end
+
+function str = ConnectStr(strCell, sep)
+    if nargin < 2
+        sep = '';
+    end
+    n = size(strCell, 2);
+
+    for i = 1:n
+        if i == 1
+            str = strCell{i};
+        else
+            str2 = [str, sep, strCell{i}];
+            str = str2;
+        end
     end
 end
