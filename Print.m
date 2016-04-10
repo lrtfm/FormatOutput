@@ -1,6 +1,6 @@
 function Print(fid, data, varargin)
-    % 0x01 0x02 0x04 0x08
-    % 
+    % Print(fid, data, 'Head', HeadCell, 'OutputFormat', Format);
+    % Format 'Plain' 'TPlain' 'Latex' 'TLatex'
     
     nVargin = length(varargin);
     [n, m] = size(data);
@@ -28,10 +28,10 @@ function Print(fid, data, varargin)
         end
     end
     if outputflag == 0
-        OutputFormat = 'Plant';
+        OutputFormat = 'Plain';
     end
-    numberFormat = '%13.2f';
-    stringFormat = '%13s';
+    numberFormat = '%10.2f';
+    stringFormat = '%10s';
     space = ' ';
     tspace = [space space];
     columnsep = '&';
@@ -40,23 +40,23 @@ function Print(fid, data, varargin)
     midrule = '\\midrule\n';
     bottomrule = '\\bottomrule\n';
     newline = '\n';
-    begintableprefix = '\\begin{tabular}[';
-    begintablesuffix = ']\n';
+    begintableprefix = '\\begin{tabular}{';
+    begintablesuffix = '}\n';
     endtable = '\\end{tabular}\n';
     
     switch lower(OutputFormat)
-        case 'plant'
-            dataFormatStr =  [char(kron(ones(1, m), numberFormat)), newline];
+        case 'plain'
+            dataFormatStr =  [char(kron(ones(1, m), [space numberFormat])), newline];
             for i = 1:m
-                fprintf(fid, stringFormat, Head{i});
+                fprintf(fid, [space stringFormat], Head{i});
             end
             fprintf(fid, newline);
             for i = 1:n
                 fprintf(fid, dataFormatStr, data(i, :));
             end
-        case 'transplant'
-            formatStr =  [stringFormat, char(kron(ones(1, n), numberFormat)), newline];
-            fprintf(fid, newline);
+        case 'tplain'
+            formatStr =  [stringFormat, char(kron(ones(1, n),...
+                [space numberFormat])), newline];
             data = data';
             for i = 1:m
                 fprintf(fid, formatStr, Head{i}, data(i, :));
@@ -82,11 +82,10 @@ function Print(fid, data, varargin)
             end
             fprintf(fid, [tspace bottomrule]);
             fprintf(fid, endtable);
-        case 'translatex'
+        case 'tlatex'
             data = data';
             formatStr =  [stringFormat,char(kron(ones(1, n),...
                 [space columnsep space numberFormat])), endline];
-            data = data';
             begintable = [begintableprefix, kron(ones(1, n), 'c'), begintablesuffix];
             fprintf(fid, begintable);
             fprintf(fid, [tspace toprule]);
