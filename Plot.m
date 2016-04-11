@@ -49,10 +49,6 @@ function Plot(h, x, data, varargin)
     grid on
     if legendflag == 1
         legend(Legend,'Location', 'best', 'Fontsize', 10, 'Interpreter', 'latex')
-%         prefix = 'legend(''';
-%         middle = ConnectStr(Legend, ''',''');
-%         suffix = ''',''Location'', ''best'', ''Interpreter'', ''latex'', ''fontsize'', 10)' ;
-%         eval([prefix middle suffix]);
     end
     if xlabelflag == 1
         xlabel(Xlabel, 'interpreter', 'latex', 'fontsize', 12);
@@ -68,21 +64,5 @@ function Plot(h, x, data, varargin)
     end
     if titleflag == 1
         title(Title,'interpreter', 'latex', 'fontsize', 12);
-    end
-end
-
-function str = ConnectStr(strCell, sep)
-    if nargin < 2
-        sep = '';
-    end
-    n = size(strCell, 2);
-
-    for i = 1:n
-        if i == 1
-            str = strCell{i};
-        else
-            str2 = [str, sep, strCell{i}];
-            str = str2;
-        end
     end
 end
