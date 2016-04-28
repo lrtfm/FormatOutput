@@ -101,7 +101,7 @@ function Print(fid, data, varargin)
             fprintf(fid, endtable);
         case 'tlatex'
             data = data';
-            begintable = [begintableprefix, kron(ones(1, n), 'c'), begintablesuffix];
+            begintable = [begintableprefix, kron(ones(1, n+1), 'c'), begintablesuffix];
             fprintf(fid, begintable);
             fprintf(fid, [tspace toprule]);
             for i = 1:m
